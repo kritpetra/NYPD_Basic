@@ -124,7 +124,7 @@ shinyServer(function(input, output, session) {
 
           #         Highlights precinct:
           MapProxy %>%
-               addPolygons(data=precinctOver, layerId='highlighted', color="white", fill = FALSE)
+               addPolygons(data=precinctOver, layerId=eventOver$id, group="highlighted", color="white", fill = FALSE)
 
           #         Prints precinct information ----
           output$precinctOverInfo <- renderText({
@@ -176,7 +176,7 @@ shinyServer(function(input, output, session) {
      observeEvent(input$nycMap_shape_mouseout$id, {
           if( input$nycMap_shape_mouseout$id  %>% is.null %>% not) {
 
-               MapProxy %>% removeShape( 'highlighted' )
+               MapProxy %>% clearGroup( 'highlighted' )
                output$precinctOverInfo <- renderText("<center><h4>Hover over a precinct for more information.</h4></center>")
                output$graph_perc <- renderPlot(NULL)
 
