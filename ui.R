@@ -24,6 +24,9 @@ shinyUI(dashboardPage(
                               body {
                               font-size: 16px;
                               }
+                              small {
+                              font-size: 14px;
+                              }
                          /* Table properties */
                               td {
                                   padding-left: 15px;
@@ -57,11 +60,13 @@ shinyUI(dashboardPage(
                                                         selectInput("colorby","Color Precincts by:",choices=c(
                                                              "Total number of arrests, weighted by population" = "arrests_weighted",
                                                              "Total number of arrests" = "arrests_raw",
-                                                             "Number of arrests, by race and population" = "race_arr",
+                                                             "Number of arrests by race" = "race_arr",
+                                                             "Number of arrests by race, weighted by population" = "race_weighted",
                                                              "Racial distribution of city" = "race_dist"))),
 
                                                     div(style = 'flex: 1',
-                                                        conditionalPanel(condition = "input.colorby == 'race_dist' || input.colorby == 'race_arr'",
+                                                        conditionalPanel(condition = "input.colorby == 'race_dist' ||
+                                                                         input.colorby == 'race_arr' || input.colorby == 'race_weighted'",
                                                                          selectInput("race", "Race", choices = c(
                                                                               "White" = "W",
                                                                               "African-American" = "B",
@@ -73,14 +78,15 @@ shinyUI(dashboardPage(
                                                 div(style = 'display: flex',
                                                     div(style = 'flex: 1',
                                                          selectizeInput('removePrecincts', "Remove precincts", multiple = TRUE,
-                                                                   choices=arrestData$Precinct)),
+                                                                   choices=arrestData$Precinct, selected = c(22, 50))),
                                                     div(style = 'flex: 1',
                                                         selectizeInput('filterPrecincts', "Filter precincts", multiple = TRUE,
                                                                        choices = c("Show all", arrestData$Precinct),
                                                                        selected = "Show all",
                                                                        options = list(maxItems = 5)))),
 
-                                                        radioButtons('scale', "Scale", choices = c('Linear', 'Logarithmic'), inline = TRUE)
+                                                        radioButtons('scale', "Scale", choices = c('Linear', 'Logarithmic'), inline = TRUE,
+                                                                     selected = "Logarithmic")
 
                                      )),
                                      column(5,

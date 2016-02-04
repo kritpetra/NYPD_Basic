@@ -46,13 +46,21 @@ shinyServer(function(input, output, session) {
                            "H" = filteredData()$HispA,
                            "A" = filteredData()$AsPacA,
                            "N" = filteredData()$NativeA)
+               } else if ( input$colorby == "race_weighted") {
+                    switch(as.character(input$race),
+                           "W" = filteredData()$WhiteA/filteredData()$White*1000,
+                           "B" = filteredData()$BlackA/filteredData()$Black*1000,
+                           "H" = filteredData()$HispA/filteredData()$Hisp*1000,
+                           "A" = filteredData()$AsPacA/filteredData()$AsPac*1000,
+                           "N" = filteredData()$NativeA/filteredData()$Native*1000,
+                           )
                } else {
                     switch(as.character(input$colorby),
                            "arrests_weighted" = filteredData()$TotalA/filteredData()$Population*1000,
                            "arrests_raw" = filteredData()$TotalA)}
           }
 
-          if( input$scale == 'Logarithmic') { log(linearValues+0.00001)
+          if( input$scale == 'Logarithmic') { log(linearValues+1)
           } else { linearValues }
 
      })
@@ -124,12 +132,12 @@ shinyServer(function(input, output, session) {
 
           #         Highlights precinct:
           MapProxy %>%
-               addPolygons(data=precinctOver, layerId=eventOver$id, group="highlighted", color="white", fill = FALSE)
+               addPolygons(data=precinctOver, layerId='highlighted', color="white", fill = FALSE)
 
           #         Prints precinct information ----
           output$precinctOverInfo <- renderText({
                createTextRow <- function(label, count, total){
-                    paste0("&emsp; <b>", label, ":</b> ", count, " (", round(count/total *100, 2), "%)")
+                    paste0("&emsp; <small><b>", label, ":</b> ", count, " (", round(count/total *100, 2), "%)</small>")
                }
 
                paste(
@@ -138,16 +146,16 @@ shinyServer(function(input, output, session) {
                     gsub("[#]", round(precinctOverData$Area, 2), "<b>Area:</b> # square miles"),
                     gsub("[#]", precinctOverData$Population, "<table style='width:100%'><tr><td><b>Population:</b> # (2010 census)"),
                     createTextRow("White", precinctOverData$White, precinctOverData$Population),
-                    createTextRow("African-American", precinctOverData$Black, precinctOverData$Population),
+                    createTextRow("Afr.-American", precinctOverData$Black, precinctOverData$Population),
                     createTextRow("Hispanic", precinctOverData$Hisp, precinctOverData$Population),
-                    createTextRow("Asian/Pacific Islander", precinctOverData$AsPac, precinctOverData$Population),
+                    createTextRow("Asian/Pac. Islndr", precinctOverData$AsPac, precinctOverData$Population),
                     createTextRow("Native American", precinctOverData$Native, precinctOverData$Population),
 
                     gsub("[%]", precinctOverData$TotalA, "<td><b>Total number of arrests:</b> %"),
                     createTextRow("White", precinctOverData$WhiteA, precinctOverData$TotalA),
-                    createTextRow("African-American", precinctOverData$BlackA, precinctOverData$TotalA),
+                    createTextRow("Afr.-American", precinctOverData$BlackA, precinctOverData$TotalA),
                     createTextRow("Hispanic", precinctOverData$HispA, precinctOverData$TotalA),
-                    createTextRow("Asian/Pacific Islander", precinctOverData$AsPacA, precinctOverData$TotalA),
+                    createTextRow("Asian/Pac. Islndr", precinctOverData$AsPacA, precinctOverData$TotalA),
                     createTextRow("Native American", precinctOverData$NativeA, precinctOverData$TotalA),
                     sep="<br/>")
           })
@@ -176,7 +184,7 @@ shinyServer(function(input, output, session) {
      observeEvent(input$nycMap_shape_mouseout$id, {
           if( input$nycMap_shape_mouseout$id  %>% is.null %>% not) {
 
-               MapProxy %>% clearGroup( 'highlighted' )
+               MapProxy %>% removeShape( 'highlighted' )
                output$precinctOverInfo <- renderText("<center><h4>Hover over a precinct for more information.</h4></center>")
                output$graph_perc <- renderPlot(NULL)
 
@@ -197,11 +205,13 @@ shinyServer(function(input, output, session) {
                                         color = getColor(countryVar()),
                                         weight = 2, fillOpacity = .6) %>%
                     addLegend('bottomleft',
-                              title = ifelse(input$colorby == "arrests_weighted", "Arrests per 1000 people",
-                                             ifelse( input$colorby %in% c("race_dist") , "Population", "Arrests")),
+                              title = ifelse(input$colorby %in% c("arrests_weighted", "race_weighted"),
+                                             "Arrests per 1000 people",
+                                             ifelse( input$colorby %in% c("race_dist") ,
+                                                     "Population", "Arrests")),
                               pal = mapPalette, values = countryVar(), opacity = 0.7,
                               labFormat = labelFormat(transform = ifelse(input$scale == 'Logarithmic',
-                                                                         exp,
+                                                                         exp_minus_one ,
                                                                          identity)))
                if ( input$filterPrecincts[1]  != "Show all" ) {
                     MapProxy %>% addPolygons(data = filteredPrecincts(),
