@@ -1,20 +1,21 @@
 
+createTextRow <- function(label, count, total){
+  sprintf("&emsp; <small><b>%s:</b> %s (%s%%)</small>",
+          label, count, round(count/total *100, 2))
+}
 
-library(magrittr)
-library(leaflet)
 
 shinyServer(function(input, output, session) {
 
      # Determines the visible precincts based on both selectize inputs
      allowedPrecincts <- reactive({
-          if(input$filterPrecincts[1] == "Show all") {
+          if(input$filterPrecincts[1] == "Show all")
                show <- precincts1$Precinct
-          } else {
+          else
                show <- input$filterPrecincts
-          }
+			   
           hide <- input$removePrecincts
-
-
+		  
           return(setdiff(show, hide))
      })
 
@@ -131,28 +132,25 @@ shinyServer(function(input, output, session) {
           precinctOverData <- arrestData[arrestData$Precinct==eventOver$id,]
 
           #         Highlights precinct:
-          MapProxy %>%
-               addPolygons(data=precinctOver, layerId=eventOver$id, 
-               		  group = "highlighted", color="white", fill = FALSE)
+          MapProxy %>% addPolygons(data = precinctOver, group = 'highlighted', 
+								   color="white", fill = FALSE)
 
           #         Prints precinct information ----
           output$precinctOverInfo <- renderText({
-               createTextRow <- function(label, count, total){
-                    paste0("&emsp; <small><b>", label, ":</b> ", count, " (", round(count/total *100, 2), "%)</small>")
-               }
 
                paste(
-                    gsub("[%]", precinctOverData$Precinct, "<b><center><h2>Precinct %</h2></center></b>"),
-
-                    gsub("[#]", round(precinctOverData$Area, 2), "<b>Area:</b> # square miles"),
-                    gsub("[#]", precinctOverData$Population, "<table style='width:100%'><tr><td><b>Population:</b> # (2010 census)"),
+                    sprintf(
+                        "<b><center><h2>Precinct %s</h2></center></b></br>
+                        <b>Area:</b> %s square miles</br>
+                        <table style='width:100%%'><tr><td><b>Population:</b> %s (2010 census)",
+                        precinctOverData$Precinct, round(precinctOverData$Area, 2), precinctOverData$Population),
                     createTextRow("White", precinctOverData$White, precinctOverData$Population),
                     createTextRow("Afr.-American", precinctOverData$Black, precinctOverData$Population),
                     createTextRow("Hispanic", precinctOverData$Hisp, precinctOverData$Population),
                     createTextRow("Asian/Pac. Islndr", precinctOverData$AsPac, precinctOverData$Population),
                     createTextRow("Native American", precinctOverData$Native, precinctOverData$Population),
 
-                    gsub("[%]", precinctOverData$TotalA, "<td><b>Total number of arrests:</b> %"),
+                    sprintf("<td><b>Total number of arrests:</b> %s", precinctOverData$TotalA),
                     createTextRow("White", precinctOverData$WhiteA, precinctOverData$TotalA),
                     createTextRow("Afr.-American", precinctOverData$BlackA, precinctOverData$TotalA),
                     createTextRow("Hispanic", precinctOverData$HispA, precinctOverData$TotalA),
