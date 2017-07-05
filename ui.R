@@ -1,10 +1,3 @@
-
-#Install required packages
-source('initialize.R')
-
-require(shinydashboard)
-require(leaflet)
-
 shinyUI(dashboardPage(
      dashboardHeader(title = "Stop-and-Frisk in New York City"),
      dashboardSidebar(disable = TRUE),
