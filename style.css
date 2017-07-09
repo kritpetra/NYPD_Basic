@@ -1,0 +1,83 @@
+/* Sidebar font size */
+.sidebar-menu>li>a {
+    font-size:16px;
+  }
+  
+/* Box title font size */
+.box-header .box-title, .box-header>.fa, .box-header>.glyphicon, .box-header>.ion {
+    font-size: 20px;
+}
+  
+/* Overall font size */
+body {
+  font-size: 16px;
+}
+
+small {
+  font-size: 14px;
+}
+/* Table properties */
+td {
+  padding-left: 15px;
+  padding-right: 15px;
+  vertical-align: middle;
+}
+/* Expand and center title */
+.main-header .logo {
+  float:inherit;
+  width:inherit;
+ }
+.main-header .navbar {
+  display: none;
+}
+.leaflet-container {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+#options {
+  background-color: white;
+  padding: 20px;
+  cursor: move;
+  opacity: 0.65;
+  zoom: 0.9;
+  transition: opacity 500ms 0s;
+}
+#options:hover {
+  opacity: 0.95;
+  transition-delay: 0;
+}
+
+table {
+  margin: 0px auto;
+  float: none;
+  width: 50%;
+}
+.stacked-bar {
+  border: 1px solid black;
+  background: #d0d0d0;
+    margin: 0;
+}
+.stacked-bar-description {
+  margin: 0;
+}
+
+.white-data-bar {
+  background: #2aa1ec;
+}
+.white-data-text {
+  color: #2aa1ec;
+    text-align: left;
+}
+.black-data-bar {
+  background: #fe6a59;
+}
+.black-data-text {
+  color: #fe6a59;
+    float: right;
+}

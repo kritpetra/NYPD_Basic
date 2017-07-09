@@ -5,9 +5,27 @@ createTextRow <- function(label, count, total){
           label, count, round(count/total *100, 2))
 }
 
+createMapLabels <- function(data) {
+  
+  lapply(sprintf(includeHTML('./tooltipContents.html'),
+      data$Precinct,
+      data$Population,
+      data$TotalA,
+      data$White/data$Population*100, # TODO: repeated arguments!
+      data$Black/data$Population*100,
+      data$White/data$Population*100,
+      data$Black/data$Population*100,
+      data$WhiteA/data$TotalA*100, 
+      data$BlackA/data$TotalA*100,
+      data$WhiteA/data$TotalA*100,
+      data$BlackA/data$TotalA*100
+      
+    ), HTML)
+}
+
 
 shinyServer(function(input, output, session) {
-
+  
   #    Render base map ----
   output$nycMap <- renderLeaflet({
     leaflet() %>%
@@ -18,9 +36,6 @@ shinyServer(function(input, output, session) {
   
   #    Create instance of base map where polygons can be added
   MapProxy <- leafletProxy('nycMap')
-  
-  #    Initialize information box to display default text
-  output$precinctOverInfo <- renderText({"<center><h4>Hover over a precinct for more information.</h4></center>"})
   
   # Determines the visible precincts based on both selectize inputs
   allowedPrecincts <- reactive({
@@ -44,28 +59,29 @@ shinyServer(function(input, output, session) {
   #    Define color vector, according to user input
   countryVar <- reactive({
     data <- switch(input$colorby,
-             'race_dist' = switch(as.character(input$race),
-                                  "W" = filteredData()$White,
-                                  "B" = filteredData()$Black,
-                                  "H" = filteredData()$Hisp,
-                                  "A" = filteredData()$AsPac,
-                                  "N" = filteredData()$Native),
-             'race_arr' = switch(as.character(input$race),
-                                 "W" = filteredData()$WhiteA,
-                                 "B" = filteredData()$BlackA,
-                                 "H" = filteredData()$HispA,
-                                 "A" = filteredData()$AsPacA,
-                                 "N" = filteredData()$NativeA),
-             'race_weighted' = switch(as.character(input$race),
-                                      "W" = filteredData()$WhiteA/filteredData()$White*1000,
-                                      "B" = filteredData()$BlackA/filteredData()$Black*1000,
-                                      "H" = filteredData()$HispA/filteredData()$Hisp*1000,
-                                      "A" = filteredData()$AsPacA/filteredData()$AsPac*1000,
-                                      "N" = filteredData()$NativeA/filteredData()$Native*1000),
-             'arrests_weighted' = filteredData()$TotalA/filteredData()$Population*1000,
-             'arrests_raw' = filteredData()$TotalA,
-             stop('invalid colorby option') # default: if no match is found
-             )
+                   'population' = switch(as.character(input$race),
+                                         "O" = filteredData()$Population,
+                                         "W" = filteredData()$White,
+                                         "B" = filteredData()$Black,
+                                         "H" = filteredData()$Hisp,
+                                         "A" = filteredData()$AsPac,
+                                         "N" = filteredData()$Native),
+                   'number' = switch(as.character(input$race),
+                                     "O" = filteredData()$TotalA,
+                                     "W" = filteredData()$WhiteA,
+                                     "B" = filteredData()$BlackA,
+                                     "H" = filteredData()$HispA,
+                                     "A" = filteredData()$AsPacA,
+                                     "N" = filteredData()$NativeA),
+                   'proportion' = switch(as.character(input$race),
+                                         "O" = filteredData()$TotalA/filteredData()$Population*1000,
+                                         "W" = filteredData()$WhiteA/filteredData()$White*1000,
+                                         "B" = filteredData()$BlackA/filteredData()$Black*1000,
+                                         "H" = filteredData()$HispA/filteredData()$Hisp*1000,
+                                         "A" = filteredData()$AsPacA/filteredData()$AsPac*1000,
+                                         "N" = filteredData()$NativeA/filteredData()$Native*1000),
+                   stop('Invalid input value: input$colorby =', input$colorby) # default: if no match is found
+    )
     
     if (input$scale == 'Logarithmic') { 
       data <- log(data+1)
@@ -81,8 +97,6 @@ shinyServer(function(input, output, session) {
     mapPalette <<- colorNumeric(rev(heat.colors(10)), c(lower, upper), 10)
     mapPalette(values)
   }
-
-  
   
   #      #    Updates "Filter Precincts" so that removed precincts do not show up in the
   #      #    select menu and crash the app - NOT WORKING PROPERLY
@@ -100,81 +114,12 @@ shinyServer(function(input, output, session) {
   #      })
   
   #    Prevents users from picking "Show all" with other precincts
-  observe({
+  observeEvent(input$filterPrecincts, {
     if ( "Show all" %in% input$filterPrecincts && length(input$filterPrecincts) > 1) {
       selected <- if( input$filterPrecincts[1] == "Show all" ) 
                     input$filterPrecincts %>% setdiff( "Show all" )
                   else "Show all"
       updateSelectizeInput(session, inputId = "filterPrecincts", selected = selected)
-    }
-  })
-  
-  #    Mouseover events: highlights precinct and prints information
-  observe({
-    eventOver <- input$nycMap_shape_mouseover
-    
-    if(!is.numeric(eventOver$id)) {
-      return()
-    }
-    
-    #         Precinct information:
-    precinctOver <- precincts1[precincts1$Precinct==eventOver$id,]
-    precinctOverData <- arrestData[arrestData$Precinct==eventOver$id,]
-    
-    #         Highlights precinct:
-    MapProxy %>% addPolygons(data = precinctOver, group = 'highlighted', 
-                             color="white", fill = FALSE)
-    
-    #         Prints precinct information ----
-    output$precinctOverInfo <- renderText({
-      
-      paste(
-        sprintf(
-          "<b><center><h2>Precinct %s</h2></center></b></br>
-                        <b>Area:</b> %s square miles</br>
-                        <table style='width:100%%'><tr><td><b>Population:</b> %s (2010 census)",
-          precinctOverData$Precinct, round(precinctOverData$Area, 2), precinctOverData$Population),
-        createTextRow("White", precinctOverData$White, precinctOverData$Population),
-        createTextRow("Afr.-American", precinctOverData$Black, precinctOverData$Population),
-        createTextRow("Hispanic", precinctOverData$Hisp, precinctOverData$Population),
-        createTextRow("Asian/Pac. Islndr", precinctOverData$AsPac, precinctOverData$Population),
-        createTextRow("Native American", precinctOverData$Native, precinctOverData$Population),
-        
-        sprintf("<td><b>Total number of arrests:</b> %s", precinctOverData$TotalA),
-        createTextRow("White", precinctOverData$WhiteA, precinctOverData$TotalA),
-        createTextRow("Afr.-American", precinctOverData$BlackA, precinctOverData$TotalA),
-        createTextRow("Hispanic", precinctOverData$HispA, precinctOverData$TotalA),
-        createTextRow("Asian/Pac. Islndr", precinctOverData$AsPacA, precinctOverData$TotalA),
-        createTextRow("Native American", precinctOverData$NativeA, precinctOverData$TotalA),
-        sep="<br/>")
-    })
-    
-    output$graph_perc <- renderPlot({
-      
-      precinct_pop <- as.numeric(precinctOverData[5:9])
-      precinct_arr <- as.numeric(precinctOverData[10:14])
-      graph_max <- max(precinct_arr/precinct_pop, na.rm=TRUE)+0.01
-      
-      barplot(
-        rbind(
-          precinct_arr/precinct_pop, rep(graph_max,5)-precinct_arr/precinct_pop
-        ), # Arrested in precinct/Living in precinct
-        
-        main = "Proportion of Population Arrested, by Race",
-        names.arg = c("White", "Afrn Am.", "Natv Am.", "Asian", "Hispanic"),
-        ylim = c(0,graph_max),
-        xlab = "Race", ylab = "Percent in Precinct")
-      mtext("(Number of arrests divided by number living in precinct)", padj = -0.6)
-    })
-    
-  })
-  
-  #    Mouseout events: stop displaying information
-  observeEvent(input$nycMap_shape_mouseout$id, {
-    if( input$nycMap_shape_mouseout$id  %>% is.null %>% not) {
-      MapProxy %>% clearGroup( 'highlighted' )
-      output$precinctOverInfo <- renderText("<center><h4>Hover over a precinct for more information.</h4></center>")
-      output$graph_perc <- renderPlot(NULL)
     }
   })
   
@@ -186,20 +131,34 @@ shinyServer(function(input, output, session) {
       addPolygons(data = filteredPrecincts(),
                   layerId = ~Precinct,
                   color = getColor(countryVar()),
-                  weight = 2, fillOpacity = .6) %>%
+                  weight = 2, fillOpacity = .6, 
+                  label = createMapLabels(filteredData()),
+                  labelOptions = labelOptions(clickable = FALSE, 
+                                              className = "label-box", 
+                                              textsize = 16,
+                                              textOnly = TRUE,
+                                              style=list(
+                                                'background'='rgba(255,255,255,0.95)',
+                                                'border-color' = 'rgba(0,0,0,1)',
+                                                'border-radius' = '4px',
+                                                'border-style' = 'solid',
+                                                'border-width' = '4px')),
+                  highlight = highlightOptions(weight = 5,
+                                               color = "#FFF",
+                                               fillOpacity = 0.7,
+                                               bringToFront = TRUE)) %>%
       addLegend('bottomleft',
                 title = switch(input$colorby,
-                               'arrests_weighted' = ,
-                               'race_weighted' = 'Arrests per 1000 people',
-                               'race_dist' = 'Population',
-                               'arrests_weighted' = ,
-                               'arrests_raw' = 'Arrests'),
+                               'number' = 'Arrests',
+                               'proportion' = 'Arrests per 1000 people',
+                               'population' = 'Population',
+                               stop("Invalid option in legend: input$colorby=", input$colorby)),
                 pal = mapPalette, 
                 values = countryVar(), 
                 opacity = 0.7,
                 labFormat = labelFormat(transform = if(input$scale == 'Logarithmic') 
-                                                      exp_minus_one 
-                                                    else identity))
+                  exp_minus_one 
+                  else identity))
     
     # Stroke focused precincts
     if ( input$filterPrecincts[1]  != "Show all" ) {

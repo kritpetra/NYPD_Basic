@@ -1,0 +1,39 @@
+<div class="container" style="width: 200px">
+      <span class="text-center" style="font-size: 16px">Precinct %d</span> 
+  
+      <table>
+        <tr><td>Population</td> <td>%s</td></tr>
+        <tr><td>Arrests</td> <td>%s</td></tr>
+      </table>
+  
+      <div class="" style="padding: 10px">
+        <div class="row">
+          <span class="col-xs-6 text-left">White</span>
+          <span class="col-xs-6 text-right">Black</span>
+        </div>
+
+        <div class="row">
+          <div class="row stacked-bar-description">
+            <span class="col-xs-3 white-data-text">%0.1f%%</span>
+            <span class="col-xs-6 text-center">Population</span>
+            <span class="col-xs-3 black-data-text">%0.1f%%</span>
+          </div>
+            <div class="row stacked-bar">
+              <span class="pull-left white-data-bar" style="width:%s%%">&nbsp;</span>
+              <span class="pull-right black-data-bar" style="width:%s%%">&nbsp;</span>
+            </div>
+        </div>
+
+        <div class="row">
+          <div class="row stacked-bar">
+            <span class="pull-left white-data-bar" style="width:%s%%">&nbsp;</span>
+            <span class="pull-right black-data-bar" style="width:%s%%">&nbsp;</span>
+          </div>
+          <div class="row stacked-bar-description">
+            <span class="col-xs-3 text-left white-data-text">%0.1f%%</span>
+            <span class="col-xs-6 text-center">Arrests</span>
+            <span class="col-xs-3 text-right black-data-text">%0.1f%%</span>
+          </div>
+        </div>
+      </div>
+    </div>
