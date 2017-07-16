@@ -12,7 +12,7 @@ shinyUI(dashboardPage(
       div(class='leaflet-container',
           leafletOutput('nycMap', height = '100%', width = '100%'),
           fixedPanel(id = "options", class = "panel panel-default",
-                     draggable = TRUE, top = 50, left = "auto", right = 20, bottom = "auto",
+                     draggable = TRUE, top = "auto", left = 20, right = "auto", bottom = 20,
                      width = 330, height = "auto",
                      
                      h3("Map Options"), 
@@ -27,27 +27,10 @@ shinyUI(dashboardPage(
                                              "Hispanic" = "H",
                                              "Asian/Pacific islander" = "A",
                                              "Native American" = "N")),
-                     selectizeInput('removePrecincts', "Remove precincts", multiple = TRUE,
+                     selectizeInput('removePrecincts', "Filter out precincts", multiple = TRUE,
                                     choices=arrestData$Precinct, selected = 22),
-                     selectizeInput('filterPrecincts', "Filter precincts", multiple = TRUE,
-                                    choices = c("Show all", arrestData$Precinct),
-                                    selected = "Show all",
-                                    options = list(maxItems = 5)),
                      radioButtons('scale', "Scale", choices = c('Linear', 'Logarithmic'), inline = TRUE,
                                   selected = "Logarithmic")
-          ),
-          
-          fixedPanel(id = "charts", class = "panel panel-default", draggable = FALSE, 
-                     top = "auto", left = "auto", right = 20, bottom = 10, 
-                     width = 550, height = "auto",
-                     
-                     # htmlOutput("precinctOverInfo"),
-                     div(align = "center",
-                       # plotlyOutput("populationGraph", height = 200),
-                       htmlOutput("htmlGraph", height = 200, width = '80%')
-                       # plotOutput("arrestsGraph"),
-                       # plotOutput("graph_perc", width = "80%", height = 300)
-                     )
           )
       )
     )

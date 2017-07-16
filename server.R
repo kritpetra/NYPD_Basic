@@ -1,5 +1,3 @@
-ALL_PRECINCTS <- precincts1$Precinct
-
 createTextRow <- function(label, count, total){
   sprintf("&emsp; <small><b>%s:</b> %s (%s%%)</small>",
           label, count, round(count/total *100, 2))
@@ -38,23 +36,14 @@ shinyServer(function(input, output, session) {
   #    Create instance of base map where polygons can be added
   MapProxy <- leafletProxy('nycMap')
   
-  # Determines the visible precincts based on both selectize inputs
-  allowedPrecincts <- reactive({
-    show <- if (input$filterPrecincts[1] == "Show all") 
-              ALL_PRECINCTS 
-            else input$filterPrecincts
-    hide <- input$removePrecincts
-    return(setdiff(show, hide))
-  })
-  
   # Filter shapes to only show visible precincts
   filteredPrecincts <- reactive({
-    precincts1[(precincts1$Precinct %in% allowedPrecincts()), ]
+    precincts1[!(precincts1$Precinct %in% input$removePrecincts), ]
   })
   
   # Same as above, but for data
   filteredData <- reactive({
-    arrestData[(arrestData$Precinct %in% allowedPrecincts()), ]
+    arrestData[!(arrestData$Precinct %in% input$removePrecincts), ]
   })
   
   #    Define color vector, according to user input
@@ -99,33 +88,8 @@ shinyServer(function(input, output, session) {
     mapPalette(values)
   }
   
-  #      #    Updates "Filter Precincts" so that removed precincts do not show up in the
-  #      #    select menu and crash the app - NOT WORKING PROPERLY
-  #      observeEvent(input$removePrecincts, {
-  #           print(allowedPrecincts())
-  #
-  #           updateSelectizeInput(session, 'filterPrecincts',
-  #                                choices = c("Show all", arrestData$Precinct) %>%
-  #                                     setdiff(input$removePrecincts))
-  #      })
-  #      observeEvent(input$filterPrecincts, {
-  #           updateSelectizeInput(session, 'removePrecincts',
-  #                                choices = c(arrestData$Precinct) %>%
-  #                                     setdiff(input$filterPrecincts))
-  #      })
-  
-  #    Prevents users from picking "Show all" with other precincts
-  observeEvent(input$filterPrecincts, {
-    if ( "Show all" %in% input$filterPrecincts && length(input$filterPrecincts) > 1) {
-      selected <- if( input$filterPrecincts[1] == "Show all" ) 
-                    input$filterPrecincts %>% setdiff( "Show all" )
-                  else "Show all"
-      updateSelectizeInput(session, inputId = "filterPrecincts", selected = selected)
-    }
-  })
-  
   #    Rerender the map whenever an input changes
-  observeEvent({input$colorby; input$race; input$removePrecincts; input$scale; input$filterPrecincts}, {
+  observe({
     MapProxy %>%
       clearControls() %>%
       clearShapes() %>% 
@@ -149,7 +113,7 @@ shinyServer(function(input, output, session) {
                                                color = "#FFF",
                                                fillOpacity = 0.7,
                                                bringToFront = TRUE)) %>%
-      addLegend('bottomleft',
+      addLegend('bottomright',
                 title = switch(input$colorby,
                                'number' = 'Arrests',
                                'proportion' = 'Arrests per 1000 people',
@@ -162,12 +126,6 @@ shinyServer(function(input, output, session) {
                   exp_minus_one 
                   else identity))
     
-    # Stroke focused precincts
-    if ( input$filterPrecincts[1]  != "Show all" ) {
-      MapProxy %>% addPolygons(data = filteredPrecincts(),
-                               color = 'red', weight = 2,
-                               fill = FALSE, opacity = 1)
-    }
   })
   
   
