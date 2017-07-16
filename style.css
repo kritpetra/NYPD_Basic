@@ -44,7 +44,7 @@ td {
   background-color: white;
   padding: 20px;
   cursor: move;
-  opacity: 0.65;
+  opacity: 0.85;
   zoom: 0.9;
   transition: opacity 500ms 0s;
 }
@@ -72,12 +72,14 @@ table {
 }
 .white-data-text {
   color: #2aa1ec;
-    text-align: left;
 }
 .black-data-bar {
   background: #fe6a59;
 }
 .black-data-text {
   color: #fe6a59;
-    float: right;
+}
+
+.cancel-bold {
+  font-weight: 100;
 }

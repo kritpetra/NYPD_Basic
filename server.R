@@ -18,7 +18,8 @@ createMapLabels <- function(data) {
       data$WhiteA/data$TotalA*100, 
       data$BlackA/data$TotalA*100,
       data$WhiteA/data$TotalA*100,
-      data$BlackA/data$TotalA*100
+      data$BlackA/data$TotalA*100,
+      data$BlackA/data$Black*data$White/data$WhiteA
       
     ), HTML)
 }
@@ -142,7 +143,8 @@ shinyServer(function(input, output, session) {
                                                 'border-color' = 'rgba(0,0,0,1)',
                                                 'border-radius' = '4px',
                                                 'border-style' = 'solid',
-                                                'border-width' = '4px')),
+                                                'border-width' = '2px',
+                                                "box-shadow" = "3px 3px rgba(0,0,0,0.25)")),
                   highlight = highlightOptions(weight = 5,
                                                color = "#FFF",
                                                fillOpacity = 0.7,

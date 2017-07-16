@@ -1,5 +1,5 @@
 shinyUI(dashboardPage(
-  dashboardHeader(title = "Stop-and-Frisk in New York City"),
+  dashboardHeader(title = "A Look at Stop-and-Frisk in New York City, 2005"),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
     
@@ -18,8 +18,8 @@ shinyUI(dashboardPage(
                      h3("Map Options"), 
                      selectInput("colorby","Color Precincts by:",
                                  choices = c("Number of arrests" = "number",
-                                             "Proportion of arrests" = "proportion",
-                                             "Overall population" = "population")),
+                                             "Proportion of arrests, compared to residents" = "proportion",
+                                             "Number of residents" = "population")),
                      selectInput("race", "Race", 
                                  choices = c("Overall" = "O",
                                              "White" = "W",
