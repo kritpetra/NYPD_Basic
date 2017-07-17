@@ -17,7 +17,7 @@ createMapLabels <- function(data) {
       data$BlackA/data$TotalA*100,
       data$WhiteA/data$TotalA*100,
       data$BlackA/data$TotalA*100,
-      data$BlackA/data$Black*data$White/data$WhiteA
+      (data$BlackA/data$Black*data$White/data$WhiteA)-1
       
     ), HTML)
 }
